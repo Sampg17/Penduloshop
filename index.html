@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Color Picker Coolors Style</title>
 
-<!-- League Spartan font -->
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan&display=swap" rel="stylesheet" />
 
 <style>
@@ -25,10 +24,25 @@
     width: 320px;
     height: 320px;
   }
-  #selectedColor {
-    margin-top: 60px;
-    font-size: 1.6rem;
-    font-weight: 700;
+#selectedColor {
+  margin-top: 50px; /* más espacio desde el slider */
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+#swatchContainer {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+#colorSwatch {
+  width: 160px;
+  height: 90px;
+  border-radius: 12px;
+  border: 2px solid #222;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
   }
   #warning {
     margin-top: 15px;
@@ -38,65 +52,63 @@
     display: none;
   }
 </style>
-
 </head>
 <body>
-
-<h1>Choose your color</h1>
 
 <div id="picker"></div>
 
 <div id="selectedColor">Selected color: #FF5733</div>
+<div id="swatchContainer" aria-label="Selected color preview">
+  <div id="colorSwatch"></div>
+</div>
+
 <div id="warning">⚠️ Warning: This color is very light. Recommended only for shirts on dark backgrounds.</div>
 
-<!-- iro.js library -->
 <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
-
 <script>
+  const INITIAL_COLOR = "#FF5733";
+
   const picker = new iro.ColorPicker('#picker', {
     width: 320,
     borderWidth: 1,
     borderColor: "#ddd",
     layout: [
-      { 
-        component: iro.ui.Wheel,
-        options: {}
-      },
-      {
-        component: iro.ui.Slider,
-        options: {
-          sliderType: 'value'
-        }
-      }
+      { component: iro.ui.Wheel, options: {} },
+      { component: iro.ui.Slider, options: { sliderType: 'value' } }
     ],
-    color: "#FF5733"
+    color: INITIAL_COLOR
   });
 
   const selectedColorText = document.getElementById('selectedColor');
   const warningText = document.getElementById('warning');
+  const colorSwatch = document.getElementById('colorSwatch');
 
   function getLuminance(hex) {
-    // Convierte hex a RGB
     const r = parseInt(hex.substr(1,2),16) / 255;
     const g = parseInt(hex.substr(3,2),16) / 255;
     const b = parseInt(hex.substr(5,2),16) / 255;
-    // Calcula luminancia relativa (sRGB)
-    const a = [r,g,b].map(v => {
-      return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
-    });
+    const a = [r,g,b].map(v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4));
     return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
   }
 
-  picker.on('color:change', function(color) {
-    const hex = color.hexString.toUpperCase();
+  function updateUI(hex) {
     selectedColorText.textContent = `Selected color: ${hex}`;
+    colorSwatch.style.backgroundColor = hex;
 
-    // Mostrar advertencia si la luminancia es mayor a 0.8 (color claro)
-    if(getLuminance(hex) > 0.8){
-      warningText.style.display = 'block';
-    } else {
-      warningText.style.display = 'none';
-    }
+    const lum = getLuminance(hex);
+    // Borde oscuro si el color es claro; borde claro si es oscuro
+    colorSwatch.style.borderColor = lum > 0.6 ? "#222" : "#eee";
+
+    // Advertencia para colores muy claros
+    warningText.style.display = lum > 0.8 ? 'block' : 'none';
+  }
+
+  // Inicializa el swatch y el texto
+  updateUI(INITIAL_COLOR);
+
+  picker.on('color:change', (color) => {
+    const hex = color.hexString.toUpperCase();
+    updateUI(hex);
   });
 </script>
 
