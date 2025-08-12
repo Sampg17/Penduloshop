@@ -3,77 +3,139 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Color Picker Coolors Style</title>
+<title>Color Picker — Responsive</title>
 
-<link href="https://fonts.googleapis.com/css2?family=League+Spartan&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet" />
 
 <style>
+  :root{
+    --content-max: 640px;
+  }
+  * { box-sizing: border-box; }
   body {
     font-family: 'League Spartan', sans-serif;
     background: #fafafa;
     color: #333;
-    padding: 30px;
-    text-align: center;
+    margin: 0;
+    padding: 24px;
+    display: grid;
+    place-items: start center;
+  }
+  .wrap {
+    width: 100%;
+    max-width: var(--content-max);
   }
   h1 {
+    text-align: center;
     font-weight: 700;
-    margin-bottom: 40px;
+    margin: 8px 0 24px;
+    font-size: clamp(20px, 3.5vw, 34px);
   }
-  #picker {
-    margin: 0 auto;
-    width: 320px;
-    height: 320px;
-  }
-#selectedColor {
-  margin-top: 50px; /* más espacio desde el slider */
-  font-size: 1.6rem;
-  font-weight: 700;
-}
 
-#swatchContainer {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-}
+  /* iro container (size set by JS) */
+  #picker { margin: 0 auto; }
 
-#colorSwatch {
-  width: 160px;
-  height: 90px;
-  border-radius: 12px;
-  border: 2px solid #222;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  #selectedColor {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: clamp(16px, 2.6vw, 22px);
+    word-break: break-word;
   }
+
+  /* Copy button */
+  #copyRow {
+    margin-top: 10px;
+    text-align: center;
+  }
+  #copyBtn {
+    font-family: 'League Spartan', sans-serif;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #222;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform .06s ease, box-shadow .2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  #copyBtn:active { transform: translateY(1px); }
+  #copyMsg { margin-left: 8px; font-weight: 700; }
+
+  /* Swatch */
+  #swatchContainer {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+  }
+  #colorSwatch {
+    position: relative;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    border: 2px solid #222; /* ajustado por JS */
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    transition: background-color .2s ease, border-color .2s ease, width .2s ease, height .2s ease;
+    /* width/height set by JS para seguir al picker */
+  }
+  #swatchText {
+    font-weight: 700;
+    font-size: clamp(18px, 4vw, 28px);
+    user-select: none;
+  }
+
+  /* Warning */
   #warning {
-    margin-top: 15px;
+    margin: 14px auto 0;
     color: #b22222;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: clamp(13px, 2.2vw, 17px);
+    text-align: center;
+    max-width: 46ch;
     display: none;
+  }
+
+  /* Safe bottom padding on devices with bottom bars */
+  @supports (padding: max(0px)) {
+    body { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
   }
 </style>
 </head>
 <body>
 
-<div id="picker"></div>
+<div class="wrap">
+  <h1>Choose your color</h1>
 
-<div id="selectedColor">Selected color: #FF5733</div>
-<div id="swatchContainer" aria-label="Selected color preview">
-  <div id="colorSwatch"></div>
+  <div id="picker" role="application" aria-label="Color picker"></div>
+
+  <div id="selectedColor">Selected color: #FF5733</div>
+
+  <div id="copyRow">
+    <button id="copyBtn" type="button" aria-live="polite">Copy HEX</button>
+    <span id="copyMsg" aria-hidden="true"></span>
+  </div>
+
+  <div id="swatchContainer" aria-label="Selected color preview">
+    <div id="colorSwatch">
+      <span id="swatchText">Aa</span>
+    </div>
+  </div>
+
+  <div id="warning">⚠️ Warning: This color is very light. Recommended only for shirts on dark backgrounds.</div>
 </div>
 
-<div id="warning">⚠️ Warning: This color is very light. Recommended only for shirts on dark backgrounds.</div>
-
+<!-- iro.js -->
 <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 <script>
   const INITIAL_COLOR = "#FF5733";
 
+  // Crear picker (tamaño real lo da sizePicker())
   const picker = new iro.ColorPicker('#picker', {
-    width: 320,
+    width: 320, // placeholder; se reemplaza en sizePicker()
     borderWidth: 1,
     borderColor: "#ddd",
     layout: [
-      { component: iro.ui.Wheel, options: {} },
+      { component: iro.ui.Wheel,  options: {} },
       { component: iro.ui.Slider, options: { sliderType: 'value' } }
     ],
     color: INITIAL_COLOR
@@ -82,7 +144,11 @@
   const selectedColorText = document.getElementById('selectedColor');
   const warningText = document.getElementById('warning');
   const colorSwatch = document.getElementById('colorSwatch');
+  const swatchText = document.getElementById('swatchText');
+  const copyBtn = document.getElementById('copyBtn');
+  const copyMsg = document.getElementById('copyMsg');
 
+  // Luminancia relativa (sRGB)
   function getLuminance(hex) {
     const r = parseInt(hex.substr(1,2),16) / 255;
     const g = parseInt(hex.substr(3,2),16) / 255;
@@ -90,27 +156,69 @@
     const a = [r,g,b].map(v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4));
     return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
   }
+  function idealTextColor(lum) {
+    // Si el fondo es claro, texto oscuro; si es oscuro, texto claro
+    return lum > 0.6 ? "#222" : "#fff";
+  }
 
+  // Actualiza UI cuando cambia el color
+  let lastHex = INITIAL_COLOR;
   function updateUI(hex) {
+    lastHex = hex;
     selectedColorText.textContent = `Selected color: ${hex}`;
     colorSwatch.style.backgroundColor = hex;
 
     const lum = getLuminance(hex);
-    // Borde oscuro si el color es claro; borde claro si es oscuro
     colorSwatch.style.borderColor = lum > 0.6 ? "#222" : "#eee";
-
-    // Advertencia para colores muy claros
+    swatchText.style.color = idealTextColor(lum);
     warningText.style.display = lum > 0.8 ? 'block' : 'none';
   }
 
-  // Inicializa el swatch y el texto
-  updateUI(INITIAL_COLOR);
+  // Responsivo: el wheel se ajusta a viewport y el swatch escala con él
+  function sizePicker() {
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const maxContent = 640; // igual que --content-max
+    const containerWidth = Math.min(vw - 48, maxContent); // body padding 24px x lado
+    const wheelWidth = Math.max(220, Math.min(420, Math.floor(containerWidth * 0.85))); // 220–420px
 
+    picker.resize(wheelWidth);
+
+    // Swatch proporcional al wheel
+    const swatchW = Math.round(wheelWidth * 0.55);
+    const swatchH = Math.round(wheelWidth * 0.33);
+    colorSwatch.style.width  = swatchW + "px";
+    colorSwatch.style.height = swatchH + "px";
+  }
+
+  // Debounce para resize
+  let rAF;
+  function onResize() {
+    if (rAF) cancelAnimationFrame(rAF);
+    rAF = requestAnimationFrame(sizePicker);
+  }
+
+  // Eventos
   picker.on('color:change', (color) => {
     const hex = color.hexString.toUpperCase();
     updateUI(hex);
   });
-</script>
 
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(lastHex);
+      copyMsg.textContent = 'Copied!';
+      setTimeout(() => copyMsg.textContent = '', 1500);
+    } catch (e) {
+      alert('Could not copy. Please copy manually: ' + lastHex);
+    }
+  });
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+
+  // Init
+  sizePicker();
+  updateUI(INITIAL_COLOR);
+</script>
 </body>
 </html>
