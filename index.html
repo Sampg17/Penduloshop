@@ -1,34 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Color Picker — T-Shirt Letter Preview</title>
+<title>Color Picker — Dual T-Shirt Preview</title>
 
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet" />
 
 <style>
-  :root{ --content-max: 640px; }
+  :root{ --content-max: 760px; } /* un poco más ancho para dos camisetas cómodas */
   *{ box-sizing: border-box; }
+
+  /* Página centrada */
+  html, body { height: 100%; }
   body{
     font-family:'League Spartan',sans-serif;
     background:#fafafa; color:#333;
-    margin:0; padding:24px;
-    display:grid; place-items:start center;
+    margin:0; display:flex; align-items:flex-start; justify-content:center;
+    padding:24px;
   }
-  .wrap{ width:100%; max-width:var(--content-max); }
+
+  /* Contenedor principal centrado */
+  .wrap{
+    width:100%;
+    max-width:var(--content-max);
+    display:flex; flex-direction:column; align-items:center; /* centra todo */
+    text-align:center;
+  }
+
   h1{
-    text-align:center; font-weight:700;
-    margin:8px 0 24px; font-size:clamp(20px,3.5vw,34px);
+    font-weight:700;
+    margin:8px 0 24px;
+    font-size:clamp(20px,3.5vw,34px);
   }
-  #picker{ margin:0 auto; } /* size via JS */
+
+  /* Picker */
+  #picker{ margin:0 auto; } /* ancho/alto por JS */
 
   #selectedColor{
-    margin-top:20px; text-align:center; font-weight:700;
-    font-size:clamp(16px,2.6vw,22px); word-break:break-word;
+    margin-top:20px; font-weight:700;
+    font-size:clamp(16px,2.6vw,22px);
+    word-break:break-word;
   }
 
-  #copyRow{ margin-top:10px; text-align:center; }
+  #copyRow{ margin-top:10px; }
   #copyBtn{
     font-family:'League Spartan',sans-serif;
     padding:10px 14px; border-radius:10px; border:2px solid #222;
@@ -39,20 +54,24 @@
   #copyBtn:active{ transform:translateY(1px); }
   #copyMsg{ margin-left:8px; font-weight:700; }
 
-  /* T-shirt preview */
+  /* Dos camisetas lado a lado, centradas */
   #previewWrap{
-    margin-top:14px; display:flex; justify-content:center;
+    margin-top:16px;
+    display:flex; justify-content:center; align-items:center;
+    gap:20px; flex-wrap:nowrap; /* siempre al lado */
+    width:100%;
   }
-  #tee{
+  .tee{
     filter: drop-shadow(0 6px 14px rgba(0,0,0,.12));
-    /* width/height set by JS */
+    flex:0 0 auto; /* no crecer/encoger, tamaño lo pone JS */
   }
 
   #warning{
     margin:14px auto 0; color:#b22222; font-weight:700;
-    font-size:clamp(13px,2.2vw,17px); text-align:center; max-width:46ch; display:none;
+    font-size:clamp(13px,2.2vw,17px); max-width:56ch; display:none;
   }
 
+  /* Un poco más de margen inferior seguro en móviles con barra */
   @supports(padding:max(0px)){ body{ padding-bottom:max(24px, env(safe-area-inset-bottom)); } }
 </style>
 </head>
@@ -70,29 +89,31 @@
     <span id="copyMsg" aria-hidden="true"></span>
   </div>
 
-  <!-- T-shirt SVG preview (white tee + colored letter) -->
+  <!-- Dos camisetas centradas y alineadas en fila -->
   <div id="previewWrap" aria-label="T-shirt color preview">
-    <svg id="tee" viewBox="0 0 200 180" role="img" aria-label="T-shirt shape">
-      <!-- Camiseta blanca -->
-      <path id="teeFill"
-        d="M60 12
-           L90 26
-           L110 26
-           L140 12
-           L180 52
-           L153 70
-           L153 160
-           Q153 172 140 172
-           L60 172
-           Q47 172 47 160
-           L47 70
-           L20 52
-           Z"
+    <!-- Camiseta blanca -->
+    <svg class="tee" id="teeWhite" viewBox="0 0 200 180" role="img" aria-label="White T-shirt">
+      <path
+        d="M60 12 L90 26 L110 26 L140 12 L180 52 L153 70 L153 160 Q153 172 140 172 L60 172 Q47 172 47 160 L47 70 L20 52 Z"
         fill="#FFFFFF" stroke="#222" stroke-width="3" stroke-linejoin="round" />
-      <!-- cuello -->
-      <path id="teeNeck" d="M85 28 Q100 40 115 28" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
-      <!-- Letra centrada que cambia de color -->
-      <text id="teeLetter"
+      <path d="M85 28 Q100 40 115 28" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+      <text id="letterWhite"
+        x="100" y="110"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="League Spartan, system-ui, sans-serif"
+        font-weight="700"
+        font-size="64"
+        fill="#FF5733">A</text>
+    </svg>
+
+    <!-- Camiseta negra -->
+    <svg class="tee" id="teeBlack" viewBox="0 0 200 180" role="img" aria-label="Black T-shirt">
+      <path
+        d="M60 12 L90 26 L110 26 L140 12 L180 52 L153 70 L153 160 Q153 172 140 172 L60 172 Q47 172 47 160 L47 70 L20 52 Z"
+        fill="#000000" stroke="#222" stroke-width="3" stroke-linejoin="round" />
+      <path d="M85 28 Q100 40 115 28" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+      <text id="letterBlack"
         x="100" y="110"
         text-anchor="middle"
         dominant-baseline="middle"
@@ -110,9 +131,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 <script>
   const INITIAL_COLOR = "#FF5733";
+  const GAP = 20; // gap entre camisetas (igual que en CSS)
 
   const picker = new iro.ColorPicker('#picker', {
-    width: 320, // reemplazado por sizePicker()
+    width: 320,
     borderWidth: 1,
     borderColor: "#ddd",
     layout: [
@@ -126,10 +148,9 @@
   const warningText = document.getElementById('warning');
   const copyBtn = document.getElementById('copyBtn');
   const copyMsg = document.getElementById('copyMsg');
-  const tee = document.getElementById('tee');
-  const teeLetter = document.getElementById('teeLetter');
+  const letterWhite = document.getElementById('letterWhite');
+  const letterBlack = document.getElementById('letterBlack');
 
-  // luminancia relativa (sRGB)
   function getLuminance(hex){
     const r = parseInt(hex.substr(1,2),16)/255;
     const g = parseInt(hex.substr(3,2),16)/255;
@@ -138,47 +159,47 @@
     return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
   }
 
-  // Actualiza UI
   let lastHex = INITIAL_COLOR;
   function updateUI(hex){
     lastHex = hex;
     selectedColorText.textContent = `Selected color: ${hex}`;
-    teeLetter.setAttribute('fill', hex);
+    letterWhite.setAttribute('fill', hex);
+    letterBlack.setAttribute('fill', hex);
 
     const lum = getLuminance(hex);
-    // Aviso si el color es muy claro (en camiseta blanca puede perderse)
     warningText.style.display = lum > 0.8 ? 'block' : 'none';
   }
 
-  // Responsivo: rueda + camiseta + tamaño de la letra
-  function sizePicker(){
+  // Centrado + dos camisetas lado a lado: calculamos tamaños para que quepan siempre dos.
+  function sizeAll(){
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    const maxContent = 640;
-    const containerWidth = Math.min(vw - 48, maxContent); // body padding 24px por lado
-    const wheelWidth = Math.max(220, Math.min(420, Math.floor(containerWidth * 0.85)));
+    const maxContent = 760; // igual que --content-max
+    const horizontalPadding = 48; // 24px a cada lado en <body>
+    const containerWidth = Math.min(vw - horizontalPadding, maxContent);
+
+    // Tamaño del wheel (arriba)
+    const wheelWidth = Math.max(240, Math.min(420, Math.floor(containerWidth * 0.7)));
     picker.resize(wheelWidth);
 
-    // Escalar camiseta y letra
-    const teeW = Math.round(wheelWidth * 0.6);
-    const teeH = Math.round(wheelWidth * 0.45);
-    tee.setAttribute('width', teeW);
-    tee.setAttribute('height', teeH);
+    // Dos camisetas en fila: cada una ~ la mitad, restando el gap
+    const teeWidth = Math.max(140, Math.floor((containerWidth - GAP) / 2));
+    const teeHeight = Math.round(teeWidth * 0.75); // proporción agradable
 
-    // Letra ~40% del ancho de la camiseta
-    teeLetter.setAttribute('font-size', Math.round(teeW * 0.4));
-    // Asegurar que permanezca centrada:
-    teeLetter.setAttribute('x', 100);
-    teeLetter.setAttribute('y', 110);
+    document.querySelectorAll('.tee').forEach(svg=>{
+      svg.setAttribute('width', teeWidth);
+      svg.setAttribute('height', teeHeight);
+      // letra ~ 40% del ancho de la camiseta
+      const text = svg.querySelector('text');
+      if (text) text.setAttribute('font-size', Math.round(teeWidth * 0.4));
+    });
   }
 
-  // Debounce de resize
   let rAF;
   function onResize(){
     if (rAF) cancelAnimationFrame(rAF);
-    rAF = requestAnimationFrame(sizePicker);
+    rAF = requestAnimationFrame(sizeAll);
   }
 
-  // Eventos
   picker.on('color:change', (color)=>{
     const hex = color.hexString.toUpperCase();
     updateUI(hex);
@@ -197,8 +218,8 @@
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', onResize);
 
-  // Init
-  sizePicker();
+  // init
+  sizeAll();
   updateUI(INITIAL_COLOR);
 </script>
 </body>
